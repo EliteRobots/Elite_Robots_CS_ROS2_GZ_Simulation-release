@@ -22,6 +22,7 @@ def launch_setup(context, *args, **kwargs):
     moveit_joint_limits_file = LaunchConfiguration("moveit_joint_limits_file")
     moveit_controllers_file = LaunchConfiguration("moveit_controllers_file")
     prefix = LaunchConfiguration("prefix")
+    launch_rviz = LaunchConfiguration("launch_rviz")
 
     cs_type_value = cs_type.perform(context)
     is_5_axis = cs_type_value.endswith("h")
@@ -61,7 +62,7 @@ def launch_setup(context, *args, **kwargs):
 
     cs_moveit_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [FindPackageShare("elite_robots_moveit_config"), "/launch", "/cs_moveit.launch.py"]
+            [FindPackageShare("elite_robots_moveit_config"), "/launch", "/elite_moveit.launch.py"]
         ),
         launch_arguments={
             "cs_type": cs_type,
@@ -74,7 +75,9 @@ def launch_setup(context, *args, **kwargs):
             "moveit_controllers_file": moveit_controllers_file_value,
             "prefix": prefix,
             "use_sim_time": "true",
-            "launch_rviz": "true",
+            "use_fake_hardware": "true",
+            "launch_servo": "false",
+            "launch_rviz": launch_rviz.perform(context),
         }.items(),
     )
 
@@ -88,6 +91,9 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     declared_arguments = []
+    declared_arguments.append(
+        DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch MoveIt RViz?")
+    )
     # CS specific arguments
     declared_arguments.append(
         DeclareLaunchArgument(
