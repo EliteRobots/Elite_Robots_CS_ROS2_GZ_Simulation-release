@@ -166,10 +166,18 @@ def launch_setup(context, *args, **kwargs):
         PythonLaunchDescriptionSource(
             [FindPackageShare("ros_gz_sim"), "/launch/gz_sim.launch.py"]
         ),
-        launch_arguments={"gz_args": " -r -v 4 empty.sdf"}.items(),
+        launch_arguments={"gz_args": LaunchConfiguration("gz_args")}.items(),
+    )
+
+    clock_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=["/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock"],
+        output="screen",
     )
 
     nodes_to_start = [
+        clock_bridge,
         robot_state_publisher_node,
         joint_state_broadcaster_spawner,
         delay_rviz_after_joint_state_broadcaster_spawner,
@@ -184,6 +192,12 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     declared_arguments = []
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "gz_args", default_value="-r -v 4 empty.sdf",
+            description="Gazebo arguments; add -s to run without the GUI.",
+        )
+    )
     # CS specific arguments
     declared_arguments.append(
         DeclareLaunchArgument(
