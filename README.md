@@ -9,7 +9,7 @@ This package uses:
 
 - `elite_robots_description`
 - `elite_robots_moveit_config` when launching MoveIt
-- `ros_gz_sim` and `ign_ros2_control`
+- `ros_gz_sim`, `ros_gz_bridge`, and `ign_ros2_control`
 - `ros2_control`, RViz, and Xacro
 
 Install dependencies from the root of your ROS 2 workspace:
@@ -37,6 +37,31 @@ Start Gazebo together with MoveIt:
 
 ```bash
 ros2 launch elite_robots_simulation_gz elite_sim_moveit.launch.py cs_type:=cs66
+```
+
+The simulation publishes ROS `/clock` through `ros_gz_bridge`. To start MoveIt
+in a separate terminal after starting the control simulation:
+
+```bash
+ros2 launch elite_robots_moveit_config elite_moveit.launch.py \
+  cs_type:=cs66 use_sim_time:=true use_fake_hardware:=true launch_servo:=false
+```
+
+Here `use_fake_hardware:=true` selects the unscaled trajectory controller in
+MoveIt's configuration; this MoveIt launch does not start a hardware driver.
+
+Do not run a real/fake hardware driver and Gazebo in the same ROS domain with
+the default node names. Duplicate `/robot_state_publisher` and
+`/controller_manager` services can make Gazebo read the real hardware URDF or
+make spawners configure the wrong controllers. Stop the other launch, or set
+`export ROS_DOMAIN_ID=87` in **both** simulation and MoveIt terminals before
+launching. Source the same workspace's `install/setup.bash` in both terminals.
+
+For a server-only check without Gazebo GUI or RViz:
+
+```bash
+ros2 launch elite_robots_simulation_gz elite_sim_moveit.launch.py \
+  cs_type:=cs66 launch_rviz:=false gz_args:="-s -r empty.sdf"
 ```
 
 Supported `cs_type` values are `cs63`, `cs66`, `cs612`, `cs616`, `cs618f`,
